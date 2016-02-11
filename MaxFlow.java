@@ -33,6 +33,10 @@ public class MaxFlow {
             hash = hash * 31 + capacity;
             return hash;
         }
+        
+        public String toString() {
+            return "[" + source + " " + sink + " " + capacity + "]";
+        }
     }
 
     private static class Graph {
@@ -117,11 +121,19 @@ public class MaxFlow {
                 for (Edge e : path) {
                     residuals.add(e.capacity - this.flows.get(e));
                 }
+
                 int flow = Collections.min(residuals);
+                System.out.println("found a new path with flow: " + flow);
 
                 for (Edge e : path) {
-                    this.flows.put(e, this.flows.get(e) + flow);
-                    this.flows.put(e.residualEdge, this.flows.get(e.residualEdge) - flow);
+                    int newFlow = flows.get(e) + flow;
+                    int backFlow = flows.get(e.residualEdge) - flow;
+
+                    System.out.println(e + ": " + newFlow);
+                    System.out.println(e.residualEdge + ": " + backFlow);
+
+                    flows.put(e, newFlow);
+                    flows.put(e.residualEdge, backFlow);
                 }
                 path = findPath(source, sink);
             }
@@ -136,151 +148,167 @@ public class MaxFlow {
 
     public static void main(String[] args) {
         Graph g = new Graph();
-        g.addEdge('s','a',1);
-        g.addEdge('s','b',1);
-        g.addEdge('a','c',1);
-        g.addEdge('b','c',1);
-        g.addEdge('b','d',1);
-        g.addEdge('c','e',1);
-        g.addEdge('c','f',1);
-        g.addEdge('d','f',1);
-        g.addEdge('e','t',1);
-        g.addEdge('f','t',1);
-        System.out.println(g.maxFlow('s', 't'));
+        // g.addEdge('s','a',1);
+        // g.addEdge('s','b',1);
+        // g.addEdge('a','c',1);
+        // g.addEdge('b','c',1);
+        // g.addEdge('b','d',1);
+        // g.addEdge('c','e',1);
+        // g.addEdge('c','f',1);
+        // g.addEdge('d','f',1);
+        // g.addEdge('e','t',1);
+        // g.addEdge('f','t',1);
+        // System.out.println(g.maxFlow('s', 't'));
+
+        // g = new Graph();
+        // g.addEdge('s','o',3);
+        // g.addEdge('s','p',3);
+        // g.addEdge('o','p',2);
+        // g.addEdge('o','q',3);
+        // g.addEdge('p','r',2);
+        // g.addEdge('r','t',3);
+        // g.addEdge('q','r',4);
+        // g.addEdge('q','t',2);
+        // System.out.println(g.maxFlow('s', 't'));
 
         g = new Graph();
-        g.addEdge('s','o',3);
-        g.addEdge('s','p',3);
-        g.addEdge('o','p',2);
-        g.addEdge('o','q',3);
-        g.addEdge('p','r',2);
-        g.addEdge('r','t',3);
-        g.addEdge('q','r',4);
-        g.addEdge('q','t',2);
-        System.out.println(g.maxFlow('s', 't'));
+        g.addEdge('S','A',10);
+        g.addEdge('S','C',10);
 
-        g = new Graph();
-        g.addEdge('s','a',1);
-        g.addEdge('s','b',1);
-        g.addEdge('s','c',1);
-        g.addEdge('s','d',1);
+        g.addEdge('A','B',4);
+        g.addEdge('A','C',2);
+        g.addEdge('A','D',8);
 
-        g.addEdge('a','m',1);
-        g.addEdge('b','m',1);
-        g.addEdge('c','m',1);
-        g.addEdge('d','m',1);
+        g.addEdge('B','T',10);
 
-        g.addEdge('a','n',1);
-        g.addEdge('b','n',1);
-        g.addEdge('c','n',1);
-        g.addEdge('d','n',1);
+        g.addEdge('C','D',9);
 
-        g.addEdge('m','w',1);
-        g.addEdge('m','x',1);
-        g.addEdge('m','y',1);
-        g.addEdge('m','z',1);
+        g.addEdge('D','B',6);
+        g.addEdge('D','T',10);
+        System.out.println(g.maxFlow('S', 'T'));
 
-        g.addEdge('n','w',1);
-        g.addEdge('n','x',1);
-        g.addEdge('n','y',1);
-        g.addEdge('n','z',1);
+        // g = new Graph();
+        // g.addEdge('s','a',1);
+        // g.addEdge('s','b',1);
+        // g.addEdge('s','c',1);
+        // g.addEdge('s','d',1);
 
-        g.addEdge('w','t',1);
-        g.addEdge('x','t',1);
-        g.addEdge('y','t',1);
-        g.addEdge('z','t',1);
-        System.out.println(g.maxFlow('s', 't'));
+        // g.addEdge('a','m',1);
+        // g.addEdge('b','m',1);
+        // g.addEdge('c','m',1);
+        // g.addEdge('d','m',1);
 
-        g = new Graph();
-        g.addEdge('s','a',1);
-        g.addEdge('s','b',1);
-        g.addEdge('s','c',1);
-        g.addEdge('s','d',1);
+        // g.addEdge('a','n',1);
+        // g.addEdge('b','n',1);
+        // g.addEdge('c','n',1);
+        // g.addEdge('d','n',1);
 
-        g.addEdge('a','w',1);
-        g.addEdge('a','x',1);
-        g.addEdge('a','y',1);
-        g.addEdge('a','z',1);
+        // g.addEdge('m','w',1);
+        // g.addEdge('m','x',1);
+        // g.addEdge('m','y',1);
+        // g.addEdge('m','z',1);
 
-        g.addEdge('b','w',1);
-        g.addEdge('b','x',1);
-        g.addEdge('b','y',1);
-        g.addEdge('b','z',1);
+        // g.addEdge('n','w',1);
+        // g.addEdge('n','x',1);
+        // g.addEdge('n','y',1);
+        // g.addEdge('n','z',1);
 
-        g.addEdge('c','w',1);
-        g.addEdge('c','x',1);
-        g.addEdge('c','y',1);
-        g.addEdge('c','z',1);
+        // g.addEdge('w','t',1);
+        // g.addEdge('x','t',1);
+        // g.addEdge('y','t',1);
+        // g.addEdge('z','t',1);
+        // System.out.println(g.maxFlow('s', 't'));
 
-        g.addEdge('d','w',1);
-        g.addEdge('d','x',1);
-        g.addEdge('d','y',1);
-        g.addEdge('d','z',1);
+        // g = new Graph();
+        // g.addEdge('s','a',1);
+        // g.addEdge('s','b',1);
+        // g.addEdge('s','c',1);
+        // g.addEdge('s','d',1);
 
-        g.addEdge('w','m',1);
-        g.addEdge('x','m',1);
-        g.addEdge('y','m',1);
-        g.addEdge('z','m',1);
+        // g.addEdge('a','w',1);
+        // g.addEdge('a','x',1);
+        // g.addEdge('a','y',1);
+        // g.addEdge('a','z',1);
 
-        g.addEdge('w','n',1);
-        g.addEdge('x','n',1);
-        g.addEdge('y','n',1);
-        g.addEdge('z','n',1);
+        // g.addEdge('b','w',1);
+        // g.addEdge('b','x',1);
+        // g.addEdge('b','y',1);
+        // g.addEdge('b','z',1);
 
-        g.addEdge('m','t',1);
-        g.addEdge('n','t',1);
-        System.out.println(g.maxFlow('s', 't'));
+        // g.addEdge('c','w',1);
+        // g.addEdge('c','x',1);
+        // g.addEdge('c','y',1);
+        // g.addEdge('c','z',1);
+
+        // g.addEdge('d','w',1);
+        // g.addEdge('d','x',1);
+        // g.addEdge('d','y',1);
+        // g.addEdge('d','z',1);
+
+        // g.addEdge('w','m',1);
+        // g.addEdge('x','m',1);
+        // g.addEdge('y','m',1);
+        // g.addEdge('z','m',1);
+
+        // g.addEdge('w','n',1);
+        // g.addEdge('x','n',1);
+        // g.addEdge('y','n',1);
+        // g.addEdge('z','n',1);
+
+        // g.addEdge('m','t',1);
+        // g.addEdge('n','t',1);
+        // System.out.println(g.maxFlow('s', 't'));
 
         
-        g = new Graph();
-        g.addEdge('s','a',1);
-        g.addEdge('s','b',1);
+        // g = new Graph();
+        // g.addEdge('s','a',1);
+        // g.addEdge('s','b',1);
 
-        g.addEdge('a','w',1);
-        g.addEdge('b','w',1);
+        // g.addEdge('a','w',1);
+        // g.addEdge('b','w',1);
 
-        g.addEdge('w','m',1);
-        g.addEdge('x','m',1);
-        g.addEdge('y','m',1);
+        // g.addEdge('w','m',1);
+        // g.addEdge('x','m',1);
+        // g.addEdge('y','m',1);
 
-        g.addEdge('w','n',1);
+        // g.addEdge('w','n',1);
 
-        g.addEdge('m','t',1);
-        g.addEdge('n','t',1);
-        System.out.println(g.maxFlow('s', 't'));
+        // g.addEdge('m','t',1);
+        // g.addEdge('n','t',1);
+        // System.out.println(g.maxFlow('s', 't'));
 
-        g = new Graph();
-        // a: ! - @
-        // b: # - $
-        // w: % - ^
-        // x: & - *
-        // y: ( - )
-        // m: _ - =
-        // n: - - +
-        g.addEdge('s','!',1);
-        g.addEdge('!','@',1);
+        // g = new Graph();
+        // // a: ! - @
+        // // b: # - $
+        // // w: % - ^
+        // // x: & - *
+        // // y: ( - )
+        // // m: _ - =
+        // // n: - - +
+        // g.addEdge('s','!',1);
+        // g.addEdge('!','@',1);
 
-        g.addEdge('s','#',1);
-        g.addEdge('#','$',1);
+        // g.addEdge('s','#',1);
+        // g.addEdge('#','$',1);
 
-        g.addEdge('@','%',1);
-        g.addEdge('%','^',1);
-        g.addEdge('$','%',1);
+        // g.addEdge('@','%',1);
+        // g.addEdge('%','^',1);
+        // g.addEdge('$','%',1);
 
-        g.addEdge('^','_',1);
-        g.addEdge('_','=',1);
-        g.addEdge('&','*',1);
-        g.addEdge('*','_',1);
-        g.addEdge('(',')',1);
-        g.addEdge(')','_',1);
+        // g.addEdge('^','_',1);
+        // g.addEdge('_','=',1);
+        // g.addEdge('&','*',1);
+        // g.addEdge('*','_',1);
+        // g.addEdge('(',')',1);
+        // g.addEdge(')','_',1);
 
 
-        g.addEdge('^','-',1);
-        g.addEdge('-','+',1);
+        // g.addEdge('^','-',1);
+        // g.addEdge('-','+',1);
 
-        g.addEdge('=','t',1);
-        g.addEdge('+','t',1);
-        System.out.println(g.maxFlow('s', 't'));
+        // g.addEdge('=','t',1);
+        // g.addEdge('+','t',1);
+        // System.out.println(g.maxFlow('s', 't'));
 
 
     }

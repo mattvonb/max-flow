@@ -15,12 +15,6 @@ import java.util.*;
  * (other than the ultimate source & sink) to a pair of nodes with one edge between them having a capacity of 1.
  */
 class Test {
-    // public static void main(String [] args) throws Exception{
-    //     World world = parseWorld();
-    //     int numAnts = countAnts(world);
-    //     System.out.println(numAnts);
-    // }
-
     public static void main(String [] args) throws Exception {
         String[] files = { "world.txt", "world2.txt", "world3.txt", "world4.txt", "world5.txt", "world6.txt", "world7.txt", "world8.txt", "world9.txt", "world10.txt",  "world11.txt", "world13.txt", "world14.txt" };
         int[] expectedResults = {1, 2, 1, 3, 1, 135, 120, 117, 124, 0, 2, 2, 1};      
@@ -43,16 +37,6 @@ class Test {
         int maxDist = parseDistance(firstLine);
         return new World(numRows, numCols, maxDist, parseMatrix(numRows, numCols, in));
     }
-
-    // private static World parseWorld() {
-    //     BufferedReader in = new BufferedReader(
-    //         new InputStreamReader(System.in));
-    //     String firstLine = in.readLine();
-    //     int numRows = parseRowCount(firstLine);
-    //     int numCols = parseColumnCount(firstLine);
-    //     int maxDist = parseDistance(firstLine);
-    //     return new World(numRows, numCols, maxDist, parseMatrix(numRows, numCols, in));
-    // }
 
     public static int countAnts(World world) {
         // doesn't matter what our source and sink are, as long as they are unique
@@ -268,8 +252,11 @@ class Test {
                 int flow = Collections.min(residuals);
 
                 for (Edge e : path) {
-                    flows.put(e, flows.get(e) + flow);
-                    flows.put(e.residualEdge, flows.get(e.residualEdge) - flow);
+                    int newFlow = flows.get(e) + flow;
+                    int backFlow = flows.get(e.residualEdge) - flow;
+
+                    flows.put(e, newFlow);
+                    flows.put(e.residualEdge, backFlow);
                 }
                 path = findPath(source, sink);
             }
@@ -313,6 +300,10 @@ class Test {
             hash = hash * 31 + sink.hashCode();
             hash = hash * 31 + capacity;
             return hash;
+        }
+
+        public String toString() {
+            return "[" + source + " " + sink + " " + capacity + "]";
         }
     }
 
