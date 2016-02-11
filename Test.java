@@ -39,33 +39,46 @@ class Test {
     }
 
     public static int countAnts(World world) {
-        // doesn't matter what our source and sink are, as long as they are unique
-        // in the graph and can be referenced later.
-        FlowGraph g = new FlowGraph(new Point(-1, -1), new Point(-2, -2));
-
+        List<Workplace> workplaces = new ArrayList<>();
         for (int row = 0; row < world.NUM_ROWS; row++) {
             for (int col = 0; col < world.NUM_COLS; col++) {
                 if (world.matrix[row][col] == WORKPLACE) {
-                    constructEdges(g, world, row, col);
+                    Point start = new Point(row, col);
+                    workplaces.add(search(world, start));
                 }
             }
         }
 
-	    return g.maxFlow(g.source, g.sink);
-    }
+        // construct a flow graph in such a way that calculating the max flow
+        // calculates the number of ants we can allocate.
+        FlowGraph<Point> g = new FlowGraph<>();
 
-    public static void constructEdges(FlowGraph g, World world, int workplaceRow, int workplaceCol) {
-        Point start = new Point(workplaceRow, workplaceCol);
-        search(g, world, start);
-    }     
+        // doesn't matter what our source and sink are, as long as they are unique
+        // in the graph and can be referenced later.
+        Point flowSource = new Point(-1, -1);
+        Point flowSink = new Point(-2, -2);
+        
+        for (Workplace workplace : workplaces) {
+            // create edges for all the potential {fruit, meat, workplace} paths we found
+            // and add them to the graph
+            for (Point fruit : workplace.fruit) {
+                addEdge(g, flowSource, flowSink, flowSource, fruit);
+                addEdge(g, flowSource, flowSink, fruit, workplace.workplace);
+            }
+            
+            for (Point meat : workplace.meat) {
+                addEdge(g, flowSource, flowSink, workplace.workplace, meat);
+                addEdge(g, flowSource, flowSink, meat, flowSink);
+            }
+        }
+        return g.maxFlow(flowSource, flowSink);
+    }
 
     /**
      * Find all the F and M that can be reached from +workplace+
-     * and add the appropriate edges to graph +g+
      */
-    public static void search(FlowGraph g, World world, Point workplace) {
-        Set<Point> fruits = new HashSet<>();
-        Set<Point> meats = new HashSet<>();
+    public static Workplace search(World world, Point start) {
+        Workplace workplace = new Workplace(start);
 
         // Use BFS to find all the fruit and meat that can be reached from 
         // the given W.
@@ -75,8 +88,8 @@ class Test {
         Deque<Point> nextQ = new LinkedList<>();
         int curDist = 1;
         
-        curQ.addFirst(workplace);
-        visited.add(workplace);
+        curQ.addFirst(workplace.workplace);
+        visited.add(workplace.workplace);
 
         do {
             Point p = curQ.removeLast();
@@ -88,10 +101,10 @@ class Test {
                 if (next.row >= 0 && next.row < world.NUM_ROWS && next.col >= 0 && next.col < world.NUM_COLS) {
                     char item = world.matrix[next.row][next.col];
                     if (item == MEAT) {
-                        meats.add(next);
+                        workplace.meat.add(next);
                     }
                     else if (item == FRUIT) {
-                        fruits.add(next);
+                        workplace.fruit.add(next);
                     }
                     else if (item == GRASS && !visited.contains(next)) {
                         visited.add(next);
@@ -106,17 +119,36 @@ class Test {
                 curDist++;
             }
         } while (curDist <= world.MAX_DIST && !curQ.isEmpty());
+        
+        return workplace;
+    }
 
-        // create edges for all the potential {fruit, meat, workplace} paths we found
-        // and add them to the graph
-        for (Point fruit : fruits) {
-            g.addEdge(g.source, fruit);
-            g.addEdge(fruit, workplace);
+    /**
+     * Simulate node capacity by replacing each node (besides our ultimate source and sink)
+     * with a pair of nodes that have a single edge between them with a capacity of 1.
+     */
+    private static void addEdge(FlowGraph<Point> g, Point flowSource, Point flowSink, Point newSource, Point newSink) {
+        Point newSourceIn = new Point(newSource.row, ~newSource.col);
+        Point newSourceOut = new Point(~newSource.row, newSource.col);
+
+        Point newSinkIn = new Point(newSink.row, ~newSink.col);
+        Point newSinkOut = new Point(~newSink.row, newSink.col);
+
+        if (newSource.equals(flowSource) && newSink.equals(flowSink)) {
+            g.addEdge(newSource, newSink, 1);
         }
-
-        for (Point meat : meats) {
-            g.addEdge(workplace, meat);
-            g.addEdge(meat, g.sink);
+        else if (newSource.equals(flowSource)) {
+            g.addEdge(newSource, newSinkIn, 1);
+            g.addEdge(newSinkIn, newSinkOut, 1);
+        }
+        else if (newSink.equals(flowSink)) {
+            g.addEdge(newSourceIn, newSourceOut, 1);
+            g.addEdge(newSourceOut, newSink, 1);
+        }
+        else {
+            g.addEdge(newSourceIn, newSourceOut, 1);
+            g.addEdge(newSourceOut, newSinkIn, 1);
+            g.addEdge(newSinkIn, newSinkOut, 1);
         }
     }
 
@@ -124,190 +156,7 @@ class Test {
     /**
      * Data model for max flow problem.
      */
-    private static class FlowGraph {
-        private Map<Point, Set<Edge>> edges;
-        private Map<Edge, Integer> flows;
-        public final Point source;
-        public final Point sink;
-
-        public FlowGraph(Point source, Point sink) {
-            edges = new HashMap<>();
-            flows = new HashMap<>();
-            this.source = source;
-            this.sink = sink;
-        }
-
-        private void addEdge(Point node, Edge e) {
-            if (!edges.containsKey(node)) {
-                edges.put(node, new HashSet<>());
-            }
-            edges.get(node).add(e);
-        }
-
-        public Set<Edge> getEdges(Point node) {
-            if (edges.containsKey(node)) {
-                return edges.get(node);
-            }
-            return new HashSet<>();
-        }
-
-        /**
-         * Simulate node capacity by replacing each node (besides our ultimate source and sink)
-         * with a pair of nodes that have a single edge between them with a capacity of 1.
-         */
-        public void addEdge(Point source, Point sink) {
-            Point sourceIn = new Point(source.row, ~source.col);
-            Point sourceOut = new Point(~source.row, source.col);
-
-            Point sinkIn = new Point(sink.row, ~sink.col);
-            Point sinkOut = new Point(~sink.row, sink.col);
-
-            if (source.equals(this.source) && sink.equals(this.sink)) {
-                addEdge(source, sink, 1);
-            }
-            else if (source.equals(this.source)) {
-                addEdge(source, sinkIn, 1);
-                addEdge(sinkIn, sinkOut, 1);
-            }
-            else if (sink.equals(this.sink)) {
-                addEdge(sourceIn, sourceOut, 1);
-                addEdge(sourceOut, sink, 1);
-            }
-            else {
-                addEdge(sourceIn, sourceOut, 1);
-                addEdge(sourceOut, sinkIn, 1);
-                addEdge(sinkIn, sinkOut, 1);
-            }
-        }
-
-        private void addEdge(Point source, Point sink, int capacity) {
-            if (source.equals(sink)) {
-                throw new IllegalArgumentException("source can't equal sink.");
-            }
-            Edge e = new Edge(source, sink, capacity);
-            Edge re = new Edge(sink, source, 0);
-            e.residualEdge = re;
-            re.residualEdge = e;
-            
-            addEdge(source, e);
-            addEdge(sink, re);
-
-            flows.put(e, 0);
-            flows.put(re, 0);
-        }
-        
-        /**
-         * BFS from +source+ to +sink+. At the end of the search walk
-         * backwards through +prev+ starting with sink to 
-         * get the path.
-         */
-        private List<Edge> findPath(Point source, Point sink) {
-            if (source == sink) {
-                return null;
-            }
-
-            Map<Point, Edge> prev = new HashMap<>();
-            prev.put(source, null);
-
-            HashSet<Point> visited = new HashSet<>();
-            Deque<Point> q = new LinkedList<>();
-            q.addFirst(source);
-            visited.add(source);
-
-            while (!q.isEmpty()) {
-                Point node = q.removeLast();
-                for (Edge e : getEdges(node)) {
-                    int residual = e.capacity - flows.get(e);
-                    if (residual > 0 && !visited.contains(e.sink)) {
-                        prev.put(e.sink, e);
-                        if (e.sink == sink) {
-                            return toPath(prev, sink);
-                        }
-
-                        visited.add(e.sink);
-                        q.addFirst(e.sink);
-                    }
-                }
-            }
-            return null;
-        }
-
-        private List<Edge> toPath(Map<Point, Edge> prev, Point sink) {
-            LinkedList<Edge> path = new LinkedList<>();
-            Edge e = null;
-            while ((e = prev.get(sink)) != null) {
-                path.addFirst(e);
-                sink = e.source;
-            }
-            return path;
-        }
-
-        public int maxFlow(Point source, Point sink) {
-            List<Edge> path = findPath(source, sink);
-            while (path != null) {
-                List<Integer> residuals = new ArrayList<>();
-                for (Edge e : path) {
-                    residuals.add(e.capacity - flows.get(e));
-                }
-                int flow = Collections.min(residuals);
-
-                for (Edge e : path) {
-                    int newFlow = flows.get(e) + flow;
-                    int backFlow = flows.get(e.residualEdge) - flow;
-
-                    flows.put(e, newFlow);
-                    flows.put(e.residualEdge, backFlow);
-                }
-                path = findPath(source, sink);
-            }
-            
-            int sum = 0;
-            for (Edge e : getEdges(source)) {
-                sum += flows.get(e);
-            }
-            return sum;
-        }
-    }
-    
-    private static class Edge {
-        public final Point source;
-        public final Point sink;
-        public final int capacity;
-        public Edge residualEdge;
-        
-        public Edge(Point source, Point sink, int capacity) {
-            this.source = source;
-            this.sink = sink;
-            this.capacity = capacity;
-            this.residualEdge = null;
-        }
-        
-        public boolean equals(Object o) {
-            if (o == null) {
-                return false;
-            }
-            
-            if (!(o instanceof Edge)) {
-                return false;
-            }
-            Edge that = (Edge)o;
-            
-            return this.source.equals(that.source) && this.sink.equals(that.sink) && this.capacity == that.capacity;
-        }
-
-        public int hashCode() {
-            int hash = 17 + source.hashCode();
-            hash = hash * 31 + sink.hashCode();
-            hash = hash * 31 + capacity;
-            return hash;
-        }
-
-        public String toString() {
-            return "[" + source + " " + sink + " " + capacity + "]";
-        }
-    }
-
-     private static class Point {
+     public static class Point {
         public final int row;
         public final int col;
         public Point(int row, int col) {
@@ -330,6 +179,21 @@ class Test {
 
         public String toString() {
             return "(" + col + ", " + row + ")";
+        }
+    }
+
+    /**
+     * Stores the coordinates of a W in the world and the coordinates of all the F and M
+     * reachable from it.
+     */
+    private static class Workplace {
+        public final Point workplace;
+        public final Set<Point> fruit;
+        public final Set<Point> meat;
+        public Workplace(Point workplace) {
+            this.workplace = workplace;
+            fruit = new HashSet<>();
+            meat = new HashSet<>();
         }
     }
 
@@ -378,5 +242,4 @@ class Test {
         }
         return matrix;
     }
-
 }
