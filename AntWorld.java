@@ -17,6 +17,8 @@ import java.util.*;
  *   K - the maximum distance an ant can move in the world from a workplace.
  *
  * Ants can only move in 4 directions: up, down, left, and right. Each move they make is one unit of distance.
+ * Ants can only move on grass tiles.
+ *
  * Each ant can be assigned to exactly one fruit, meat and workplace. Each fruit, meat, and workplace can be assigned to
  * at most one ant.
  *
@@ -24,23 +26,24 @@ import java.util.*;
  *
  * What is the maximum number of ants that can be allocated to a given world?
  *   
- * This program solves this problem by reducing it into a max flow problem. I then use... well I started with Ford-Fulkerson
+ * This program solves the above problem by reducing it to a max flow problem. I then use... well I started with Ford-Fulkerson
  * but that was proving to be too slow, so I replaced the recursive depth-first path search with a breadth-first search,
- * which I guess makes it Edmonds-Karp? But I'm not sure... it's one or the other.
+ * which I guess makes it Edmonds-Karp? It's Ford-Fulkerson with a breadth-first path search, whatever you're supposed to call it.
  * 
  * How this works:
  *
  * Basically, for each W, we use a breadth-first search to find all F and M that can be reached from it.
- * We then construct our flow-graph as follows:
+ * We then construct our flow-graph as follows (all edges have capacity 1):
  * We add an edge from each of those Fs to that W, and an edge from that W to each of those Ms.
  * We also add an ultimate source and sink node, so each F gets an edge from that source and each M gets an edge to that sink.
- * Finally, to enforce the fact that each resource can be utilized by just a single ant, we convert each node in the graph 
- * (other than the ultimate source & sink) to a pair of nodes with one edge between them having a capacity of 1.
+ * Finally, to enforce the constraint that each resource be utilized by a single ant, we convert each node in the graph 
+ * (other than the ultimate source & sink) to a pair of nodes with one edge between them.
  */
 class AntWorld {
     public static void main(String [] args) throws Exception {
         String[] files = { "world.txt", "world2.txt", "world3.txt", "world4.txt", "world5.txt", "world6.txt", "world7.txt", "world8.txt", "world9.txt", "world10.txt",  "world11.txt", "world13.txt", "world14.txt" };
-        int[] expectedResults = {1, 2, 1, 3, 1, 135, 120, 117, 124, 0, 2, 2, 1};      
+        int[] expectedResults = {1, 2, 1, 3, 1, 135, 120, 117, 124, 0, 2, 2, 1};
+
         for (int i = 0; i < files.length; i++) {
             World world = parseWorld(files[i]);
             
