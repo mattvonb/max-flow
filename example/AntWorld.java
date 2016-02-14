@@ -3,18 +3,20 @@ import java.util.*;
 
 /**
  * Problem statement:
+ * 
+ * You are given a text file that represents a 2D world.
  *
- * You have a 2D world represented by a text file. The following characters and their meanings comprise the world:
+ * The first line in the file is three numbers separated by a comma and a space: N, M, K
+ *   N - the number of rows in the world
+ *   M - the number of columns in the world
+ *   K - the maximum distance an ant can move in the world from a workplace.
+ *
+ * Lines 2 through N+1 are made of up the following characters (which have the given  meanings in the world:)
  *   . - grass
  *   X - rocks
  *   M - meat
  *   F - fruit
  *   W - workplace
- * 
- * The first line in the file is three numbers separated by a command and a space: N, M, K
- *   N - the number of rows in the world
- *   M - the number of columns in the world
- *   K - the maximum distance an ant can move in the world from a workplace.
  *
  * Ants can only move in 4 directions: up, down, left, and right. Each move they make is one unit of distance.
  * Ants can only move on grass tiles.
